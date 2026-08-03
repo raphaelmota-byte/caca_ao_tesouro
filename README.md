@@ -39,10 +39,10 @@ REGRAS
   
 MOVIMENTAÇÃO
 O jogador pode se mover utilizando:
-  • W (cima)
-  • S (baixo)
-  • A (esquerda)
-  • D (direita)
+  - W (cima)
+  - S (baixo)
+  - A (esquerda)
+  - D (direita)
 OBS.: não é permitido sair do tabuleiro e nem atravessar obstáculos.
 
 REQUISITOS
