@@ -8,7 +8,7 @@ const
 
      TAM_TABULEIRO = 3
      CARACTERES_PERMITIDOS = "XTABM."
-     DIRECAO_X_PERMITIDA = "ADWS"
+     DIRECAO_PERMITIDA = "ADWS"
 
 
 tipo
@@ -101,40 +101,23 @@ Funcao calcular_mov_y(direcao:caractere): inteiro
 fimfuncao
 
 
-Funcao Validar_mov(posicao:inteiro ; direcao:caractere):logico
+Funcao validar_mov(pos_x , pos_y:inteiro ; direcao:caractere):logico
 
     var
-        posicao_futura: inteiro
+        novo_x , novo_y: inteiro
     inicio
-    posicao_futura <- posicao + calcular_mov_x(direcao) + calcular_mov_y(direcao)
+    novo_x <- pos_x + calcular_mov_x(direcao)
+    novo_y <- pos_y + calcular_mov_y(direcao)
 
-    se (posicao_futura > TAM_TABULEIRO) ou (posicao_futura <= 0) entao
+    se (novo_x > TAM_TABULEIRO) ou (novo_x <= 0) ou (novo_y > TAM_TABULEIRO) ou (novo_y <= 0) entao
        retorne Falso
     senao
-       retorne Verdadeiro
-
-    fimse
-fimfuncao
-
-
-funcao mover_x(pos_x: inteiro  ; direcao:caractere): inteiro
-  Inicio
-
-    se Validar_mov(pos_x ; direcao) = Verdadeiro entao
-        retorne  calcular_mov_x(direcao)
-    senao
-        retorne 0
-    fimse
-
-fimfuncao
-
-funcao mover_y(pos_y: inteiro ; direcao:caractere): inteiro
-  inicio
-  
-      se Validar_mov(pos_y ; direcao) = Verdadeiro entao
-        retorne  calcular_mov_y(direcao)
-    senao
-        retorne 0
+       se tabuleiro[novo_y , novo_x] = "X" entao
+           retorne Falso
+       senao
+           retorne Verdadeiro
+       fimse
+       
     fimse
 fimfuncao
 
@@ -158,18 +141,17 @@ Enquanto FLAG <> -1 faca
         escreva("digite para qual direção vc vai(use AWSD): ")
         leia(direcao_atual)
 
-        se nao validacao_caractere(direcao_atual , DIRECAO_X_PERMITIDA) entao
+        se nao validacao_caractere(direcao_atual , DIRECAO_PERMITIDA) entao
             escrevaL("Digite apenas os caracteres válidos!! ")
         fimse
-    ate validacao_caractere(direcao_atual , DIRECAO_X_PERMITIDA)
+    ate validacao_caractere(direcao_atual , DIRECAO_PERMITIDA)
 
     tabuleiro[jogador.posicao_y , jogador.posicao_x] <- aux_tabuleiro
-    deslocamento_x <- mover_x(jogador.posicao_x ; direcao_atual)
-    deslocamento_y <- mover_y(jogador.posicao_y ; direcao_atual)
 
-    se (deslocamento_x <> 0) ou (deslocamento_y <> 0) entao
-        jogador.posicao_x <- jogador.posicao_x + deslocamento_x
-        jogador.posicao_y <- jogador.posicao_y + deslocamento_y
+    se validar_mov(jogador.posicao_x, jogador.posicao_y, direcao_atual) entao
+        jogador.posicao_x <- jogador.posicao_x + calcular_mov_x(direcao_atual)
+        jogador.posicao_y <- jogador.posicao_y + calcular_mov_Y(direcao_atual)
+        
         aux_tabuleiro <- tabuleiro[jogador.posicao_y , jogador.posicao_x]
     fimse
 
