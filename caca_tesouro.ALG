@@ -8,44 +8,42 @@ const
 
      TAM_TABULEIRO = 3
      CARACTERES_PERMITIDOS = "XTABM."
-     DIRECAO_X_PERMITIDA = "AD"
+     DIRECAO_X_PERMITIDA = "ADWS"
 
-     
+
 tipo
     Jogador_Estado = Registro
     nome : caractere
     dinheiro : inteiro
     energia : inteiro
     posicao_x , posicao_y : inteiro
-    
+
     fimregistro
-    
+
 Var
    jogador : Jogador_Estado
    tabuleiro : vetor[1..TAM_TABULEIRO , 1..TAM_TABULEIRO] de caractere
    aux_tabuleiro : caractere
    i , j :inteiro
    caracter_escolhido , direcao_atual : caractere
-   deslocamento_x : inteiro
+   deslocamento_x , deslocamento_y: inteiro
    flag : inteiro
 
-   
+
 
 Funcao validacao_caractere(C_digitado , C_permitidos : caractere): logico
     inicio
-    
+
     se (C_digitado <> "") e (pos(C_digitado, C_permitidos) > 0) entao
         retorne Verdadeiro
     senao
         retorne Falso
     fimse
 fimfuncao
+
 Procedimento preencher_tabuleiro()
-
 var
-
     linha, coluna : inteiro
-
 inicio
 
     para linha de 1 ate TAM_TABULEIRO faca
@@ -58,24 +56,20 @@ inicio
 
         fimpara
     fimpara
-
 fimprocedimento
 
 Procedimento mostrar_mapa()
     var
         linha , coluna : inteiro
     inicio
-    
+
         para linha de 1 ate TAM_TABULEIRO faca
              para coluna de 1 ate TAM_TABULEIRO faca
-             
                  escreva(tabuleiro[linha,coluna] , " ")
-             
+                 
              fimpara
-             
         escreval()
         fimpara
-
 fimprocedimento
 
 Funcao calcular_mov_x(direcao:caractere): inteiro
@@ -88,23 +82,37 @@ Funcao calcular_mov_x(direcao:caractere): inteiro
               retorne (-1)
         outrocaso
             retorne 0
-              
+
     fimescolha
-    
+
 fimfuncao
+
+Funcao calcular_mov_y(direcao:caractere): inteiro
+  inicio
+
+        escolha maiusc(direcao)
+            caso "W"
+                 retorne (-1)
+            caso "S"
+                 retorne (1)
+            outrocaso
+                retorne 0
+        fimescolha
+fimfuncao
+
 
 Funcao Validar_mov(posicao:inteiro ; direcao:caractere):logico
 
     var
         posicao_futura: inteiro
     inicio
-    posicao_futura <- posicao + calcular_mov_x(direcao)
-    
+    posicao_futura <- posicao + calcular_mov_x(direcao) + calcular_mov_y(direcao)
+
     se (posicao_futura > TAM_TABULEIRO) ou (posicao_futura <= 0) entao
        retorne Falso
     senao
        retorne Verdadeiro
-       
+
     fimse
 fimfuncao
 
@@ -117,8 +125,20 @@ funcao mover_x(pos_x: inteiro  ; direcao:caractere): inteiro
     senao
         retorne 0
     fimse
-    
+
 fimfuncao
+
+funcao mover_y(pos_y: inteiro ; direcao:caractere): inteiro
+  inicio
+  
+      se Validar_mov(pos_y ; direcao) = Verdadeiro entao
+        retorne  calcular_mov_y(direcao)
+    senao
+        retorne 0
+    fimse
+fimfuncao
+
+
 
 Inicio
 flag <- 0
@@ -133,28 +153,30 @@ aux_tabuleiro <- tabuleiro[jogador.posicao_y , jogador.posicao_x]
 Enquanto FLAG <> -1 faca
     tabuleiro[jogador.posicao_y , jogador.posicao_x] <- "J"
     mostrar_mapa()
-    
+
     repita
         escreva("digite para qual direção vc vai(use AWSD): ")
         leia(direcao_atual)
-        
+
         se nao validacao_caractere(direcao_atual , DIRECAO_X_PERMITIDA) entao
             escrevaL("Digite apenas os caracteres válidos!! ")
         fimse
     ate validacao_caractere(direcao_atual , DIRECAO_X_PERMITIDA)
-    
+
     tabuleiro[jogador.posicao_y , jogador.posicao_x] <- aux_tabuleiro
     deslocamento_x <- mover_x(jogador.posicao_x ; direcao_atual)
-    
-    se deslocamento_x <> 0 entao
+    deslocamento_y <- mover_y(jogador.posicao_y ; direcao_atual)
+
+    se (deslocamento_x <> 0) ou (deslocamento_y <> 0) entao
         jogador.posicao_x <- jogador.posicao_x + deslocamento_x
+        jogador.posicao_y <- jogador.posicao_y + deslocamento_y
         aux_tabuleiro <- tabuleiro[jogador.posicao_y , jogador.posicao_x]
     fimse
 
      escreva("digite -1 para interromper: ")
     leia(FLAG)
 
-    
+
 fimEnquanto
 escreva("Posicao do jogador no final: ")
 escreval(jogador.posicao_x)
