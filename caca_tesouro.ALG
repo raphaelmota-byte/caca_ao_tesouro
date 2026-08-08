@@ -24,11 +24,11 @@ Var
    jogador : Jogador_Estado
    tabuleiro : vetor[1..TAM_TABULEIRO , 1..TAM_TABULEIRO] de caractere
    aux_tabuleiro : caractere
-   i , j :inteiro
-   caracter_escolhido , direcao_atual : caractere
-   contador_armadilhas , contador_moedas , contador_bonus: inteiro
+
+   direcao_atual : caractere
+   contador_armadilhas  , contador_bonus: inteiro
    achou_tesouro : logico
-   flag : inteiro
+
 
 
 
@@ -151,7 +151,6 @@ fimprocedimento
 
 
 Inicio
-flag <- 0
 
 jogador.posicao_x <- 1
 jogador.posicao_y <- 1
