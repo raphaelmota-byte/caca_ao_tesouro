@@ -18,6 +18,8 @@ const
      QTD_TESOUROS = 1
      TOTAL_ITENS = QTD_PAREDES + QTD_ARMADILHAS + QTD_BONUS + QTD_MOEDAS + QTD_TESOUROS
      TOTAL_CASAS = TAM_TABULEIRO * TAM_TABULEIRO - 1
+     
+     MODO_DEBUG = FALSO
 
 
 tipo
@@ -43,17 +45,18 @@ Var
    achou_tesouro : logico
 
 
-
+// ===================== VALIDAÇÃO DE ENTRADA =====================
 
 Funcao validacao_caractere(C_digitado , C_permitidos : caractere): logico
     inicio
-
     se (C_digitado <> "") e (pos(C_digitado, C_permitidos) > 0) entao
         retorne Verdadeiro
     senao
         retorne Falso
     fimse
 fimfuncao
+
+// ===================== GERAÇÃO DO TABULEIRO =====================
 
 // Monta a lista de itens que vão ser distribuídos pelo tabuleiro.
 // A ordem aqui dentro não importa pro resultado final, porque quem decide onde cada item
@@ -64,7 +67,6 @@ Procedimento montar_lista_itens()
         i, indice : inteiro
     inicio
         indice <- 1
-
         para i de 1 ate QTD_PAREDES faca
             lista_itens[indice] <- "X"
             indice <- indice + 1
@@ -91,18 +93,14 @@ Procedimento montar_lista_itens()
         fimpara
     fimprocedimento
 
-
 // Lista todas as casas do tabuleiro, EXCETO a [1,1]. Guarda cada casa como um
 // par de coordenadas nos vetores pos_linha[i] e pos_coluna[i].
-// Nesse momento a ordem ainda é "sequencial" (varre linha por linha,
-// coluna por coluna) — ainda não é aleatória, isso vem no próximo passo.
 
 Procedimento montar_posicoes_disponiveis()
     var
         linha, coluna, indice : inteiro
     inicio
         indice <- 1
-
         para linha de 1 ate TAM_TABULEIRO faca
             para coluna de 1 ate TAM_TABULEIRO faca
 
@@ -143,8 +141,7 @@ Procedimento embaralhar_posicoes()
         temp_linha, temp_coluna : inteiro
     inicio
         para i de TOTAL_CASAS ate 2 passo -1 faca
-            // RandI(i) retorna um inteiro entre 0 e i-1, por isso somamos 1
-            // pra obter um índice válido entre 1 e i
+            // RandI(i) retorna um inteiro entre 0 e i-1, por isso somamos 1 pra obter um índice válido entre 1 e i
             indice_sorteado <- RandI(i) + 1
 
             // troca as coordenadas da posição i com as da posição sorteada
@@ -158,8 +155,8 @@ Procedimento embaralhar_posicoes()
         fimpara
     fimprocedimento
 
-// Junta tudo: distribui lista_itens (o conteúdo) nas posições já
-// embaralhadas (pos_linha/pos_coluna), preenchendo o tabuleiro_real.
+// Junta tudo: distribui lista_itens (o conteúdo) nas posições já embaralhadas
+//(pos_linha/pos_coluna), preenchendo o tabuleiro_real.
 // Também inicializa o tabuleiro_visivel inteiro como "."
 
 Procedimento gerar_tabuleiro()
@@ -193,24 +190,10 @@ Procedimento gerar_tabuleiro()
         fimpara
     fimprocedimento
 
-
-Procedimento mostrar_mapa()
-    var
-        linha , coluna : inteiro
-    inicio
-
-        para linha de 1 ate TAM_TABULEIRO faca
-             para coluna de 1 ate TAM_TABULEIRO faca
-                 escreva(tabuleiro_visivel[linha,coluna] , " ")
-
-             fimpara
-        escreval()
-        fimpara
-fimprocedimento
+// ===================== MOVIMENTO E VALIDAÇÃO =====================
 
 Funcao calcular_mov_x(direcao:caractere): inteiro
  inicio
-
     escolha maiusc(direcao)
         caso "D"
             retorne 1
@@ -225,7 +208,6 @@ fimfuncao
 
 Funcao calcular_mov_y(direcao:caractere): inteiro
   inicio
-
         escolha maiusc(direcao)
             caso "W"
                  retorne (-1)
@@ -236,26 +218,48 @@ Funcao calcular_mov_y(direcao:caractere): inteiro
         fimescolha
 fimfuncao
 
-
 Funcao validar_mov(pos_x , pos_y:inteiro ; direcao:caractere):logico
-
     var
         novo_x , novo_y: inteiro
     inicio
-    novo_x <- pos_x + calcular_mov_x(direcao)
-    novo_y <- pos_y + calcular_mov_y(direcao)
+        novo_x <- pos_x + calcular_mov_x(direcao)
+        novo_y <- pos_y + calcular_mov_y(direcao)
 
-    se (novo_x > TAM_TABULEIRO) ou (novo_x <= 0) ou (novo_y > TAM_TABULEIRO) ou (novo_y <= 0) entao
-       retorne Falso
-    senao
-       se tabuleiro_real[novo_y , novo_x] = "X" entao
+        se (novo_x > TAM_TABULEIRO) ou (novo_x <= 0) ou (novo_y > TAM_TABULEIRO) ou (novo_y <= 0) entao
            retorne Falso
-       senao
-           retorne Verdadeiro
-       fimse
+        senao
+            se tabuleiro_real[novo_y , novo_x] = "X" entao
+                retorne Falso
+            senao
+               retorne Verdadeiro
+            fimse
 
-    fimse
+        fimse
 fimfuncao
+
+// Verifica se a casa pra onde o jogador está tentando ir é uma parede,
+// e se for, revela ela no tabuleiro_visivel — mesmo que o movimento
+// não seja permitido (é isso que faz o "esbarrar na parede" funcionar).
+// Repare que essa checagem de limites é parecida com a que já existe
+// dentro de validar_mov(), mas aqui ela é feita separadamente porque
+// precisamos "espiar" a casa de destino antes de decidir se o jogador
+// realmente vai se mover pra lá.
+
+Procedimento revelar_parede_se_houver(pos_x, pos_y : inteiro; direcao : caractere)
+    var
+        novo_x, novo_y : inteiro
+    inicio
+        novo_x <- pos_x + calcular_mov_x(direcao)
+        novo_y <- pos_y + calcular_mov_y(direcao)
+
+        se (novo_x >= 1) e (novo_x <= TAM_TABULEIRO) e (novo_y >= 1) e (novo_y <= TAM_TABULEIRO) entao
+            se tabuleiro_real[novo_y, novo_x] = "X" entao
+                tabuleiro_visivel[novo_y, novo_x] <- "X"
+            fimse
+        fimse
+    fimprocedimento
+    
+// ===================== EFEITOS DAS CASAS =====================
 
 Procedimento verificar_condicao_casa()
   inicio
@@ -281,25 +285,24 @@ Procedimento verificar_condicao_casa()
        fimescolha
 fimprocedimento
 
-// Verifica se a casa pra onde o jogador está tentando ir é uma parede,
-// e se for, revela ela no tabuleiro_visivel — mesmo que o movimento
-// não seja permitido (é isso que faz o "esbarrar na parede" funcionar).
-// Repare que essa checagem de limites é parecida com a que já existe
-// dentro de validar_mov(), mas aqui ela é feita separadamente porque
-// precisamos "espiar" a casa de destino antes de decidir se o jogador
-// realmente vai se mover pra lá.
-Procedimento revelar_parede_se_houver(pos_x, pos_y : inteiro; direcao : caractere)
-    var
-        novo_x, novo_y : inteiro
-    inicio
-        novo_x <- pos_x + calcular_mov_x(direcao)
-        novo_y <- pos_y + calcular_mov_y(direcao)
+// ===================== EXIBIÇÃO =====================
 
-        se (novo_x >= 1) e (novo_x <= TAM_TABULEIRO) e (novo_y >= 1) e (novo_y <= TAM_TABULEIRO) entao
-            se tabuleiro_real[novo_y, novo_x] = "X" entao
-                tabuleiro_visivel[novo_y, novo_x] <- "X"
-            fimse
-        fimse
+Procedimento mostrar_mapa()
+    var
+        linha , coluna : inteiro
+    inicio
+        para linha de 1 ate TAM_TABULEIRO faca
+             para coluna de 1 ate TAM_TABULEIRO faca
+                 escreva(tabuleiro_visivel[linha,coluna] , " ")
+
+             fimpara
+        escreval()
+        fimpara
+fimprocedimento
+
+Procedimento revelar_casa_atual()
+    inicio
+        tabuleiro_visivel[jogador.posicao_y, jogador.posicao_x] <- tabuleiro_real[jogador.posicao_y, jogador.posicao_x]
     fimprocedimento
 
 
@@ -307,6 +310,7 @@ Procedimento revelar_parede_se_houver(pos_x, pos_y : inteiro; direcao : caracter
 // Não devolve nem altera o tabuleiro_real, só empresta a posição do
 // jogador na hora de imprimir (usando um "se" na exibição), então
 // é seguro chamar isso a qualquer momento sem bagunçar o estado do jogo.
+
 Procedimento mostrar_mapa_debug()
     var
         linha, coluna : inteiro
@@ -324,8 +328,6 @@ Procedimento mostrar_mapa_debug()
         fimpara
         escreval("-------------------------")
     fimprocedimento
-
-
 
 Inicio
 
@@ -351,7 +353,9 @@ gerar_tabuleiro()
 aux_tabuleiro <- tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x]
 
 Enquanto (achou_tesouro = falso) e (jogador.energia > 0) faca
-     mostrar_mapa_debug()
+     se MODO_DEBUG = verdadeiro entao
+        mostrar_mapa_debug()
+     fimse
 
     tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x] <- "J"
     mostrar_mapa()
@@ -362,7 +366,7 @@ Enquanto (achou_tesouro = falso) e (jogador.energia > 0) faca
         leia(direcao_atual)
 
         se nao validacao_caractere(direcao_atual , DIRECAO_PERMITIDA) entao
-            escrevaL("Digite apenas os caracteres válidos!! ")
+            escreval("Digite apenas os caracteres válidos!! ")
         fimse
     ate validacao_caractere(direcao_atual , DIRECAO_PERMITIDA)
 
@@ -371,19 +375,19 @@ Enquanto (achou_tesouro = falso) e (jogador.energia > 0) faca
     revelar_parede_se_houver(jogador.posicao_x, jogador.posicao_y, direcao_atual)
 
     se validar_mov(jogador.posicao_x, jogador.posicao_y, direcao_atual) entao
-    jogador.posicao_x <- jogador.posicao_x + calcular_mov_x(direcao_atual)
-    jogador.posicao_y <- jogador.posicao_y + calcular_mov_Y(direcao_atual)
-    jogador.energia <- jogador.energia - EN_GASTA
+       jogador.posicao_x <- jogador.posicao_x + calcular_mov_x(direcao_atual)
+       jogador.posicao_y <- jogador.posicao_y + calcular_mov_y(direcao_atual)
+       jogador.energia <- jogador.energia - EN_GASTA
 
     // revela a casa nova antes de processar o efeito
-    tabuleiro_visivel[jogador.posicao_y, jogador.posicao_x] <- tabuleiro_real[jogador.posicao_y, jogador.posicao_x]
+       revelar_casa_atual()
 
-    verificar_condicao_casa()
+       verificar_condicao_casa()
 
     // depois de processado (e zerado no real), reflete no visível também
-    tabuleiro_visivel[jogador.posicao_y, jogador.posicao_x] <- tabuleiro_real[jogador.posicao_y, jogador.posicao_x]
-
-    aux_tabuleiro <- tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x]
+       revelar_casa_atual()
+       
+       aux_tabuleiro <- tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x]
 fimse
 
 
