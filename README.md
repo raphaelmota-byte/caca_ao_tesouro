@@ -65,15 +65,57 @@ pelo(s) aluno(s) no laboratório;
 4. a atividade vale 2,0 pontos na nota correspondente à primeira metade do
 semestre.
 
+# Formulação do código
 
-# Formulação do código:
+O código foi feito visando a programação funcional, dividido em funções e procedimentos organizados por responsabilidade:
 
-O código será feito visando a programação funcional, logo será dividida em diversar funções e procedimentos como:
-- mostrar_tabuleiro(proc)
-- calcular_mov(func)
-- validar_mov(func)
-- verificar_obstáculo(func)
-- mover(proc)
-- finalizar_game(proc)
-- validar_caracter(proc)
-  
+## Validação de entrada
+- **validacao_caractere** (func) — verifica se um caractere digitado está dentro de um conjunto de caracteres permitidos.
+
+## Geração do tabuleiro
+- **montar_lista_itens** (proc) — monta a lista de itens (paredes, armadilhas, bônus, moedas, tesouro) que serão distribuídos pelo tabuleiro, na quantidade definida pelas constantes.
+- **montar_posicoes_disponiveis** (proc) — lista todas as casas do tabuleiro, exceto a posição inicial [1,1].
+- **embaralhar_posicoes** (proc) — embaralha a ordem das casas disponíveis usando o algoritmo Fisher-Yates, garantindo distribuição aleatória sem repetição.
+- **gerar_tabuleiro** (proc) — combina a lista de itens com as posições já embaralhadas para preencher o tabuleiro real, e inicializa o tabuleiro visível todo com "." (nada revelado ainda).
+
+## Movimento e validação
+- **calcular_mov_x** (func) — calcula o deslocamento no eixo X a partir da direção digitada (A/D).
+- **calcular_mov_y** (func) — calcula o deslocamento no eixo Y a partir da direção digitada (W/S).
+- **validar_mov** (func) — verifica se o movimento é válido, checando limites do tabuleiro e presença de paredes.
+- **revelar_parede_se_houver** (proc) — revela uma parede no tabuleiro visível quando o jogador tenta se mover contra ela, mesmo que o movimento seja bloqueado.
+
+## Efeitos das casas
+- **verificar_condicao_casa** (proc) — aplica o efeito da casa em que o jogador está (armadilha, bônus, moeda ou tesouro) e atualiza o estado do jogador.
+
+## Exibição
+- **mostrar_mapa** (proc) — exibe o tabuleiro visível (com fog of war), mostrando apenas as casas já reveladas.
+- **revelar_casa_atual** (proc) — copia o conteúdo real da casa atual do jogador para o tabuleiro visível.
+- **mostrar_mapa_debug** (proc) — exibe o tabuleiro real completo, sem esconder nada, usado apenas para depuração.
+
+
+## Constantes de configuração
+
+O código foi pensado para que ajustes futuros sejam feitos apenas mexendo nas constantes, sem precisar alterar a lógica interna das funções.
+
+### Regras do jogo
+- **EN_INICIAL** — energia inicial do jogador ao começar o jogo.
+- **EN_GASTA** — energia gasta a cada movimento realizado.
+- **EN_GASTA_ARMADILHA** — energia perdida ao cair em uma armadilha.
+- **EN_BONUS** — energia ganha ao pegar um bônus.
+- **MOEDA** — quantidade de dinheiro ganha ao pegar uma moeda.
+
+### Tabuleiro
+- **TAM_TABULEIRO** — tamanho do tabuleiro (número de linhas e colunas). Hoje é 3, gerando um tabuleiro 3x3.
+- **CARACTERES_PERMITIDOS** — conjunto de caracteres válidos para representar o conteúdo de uma casa ("X", "T", "A", "B", "M", ".").
+- **DIRECAO_PERMITIDA** — conjunto de caracteres válidos para movimentação (A, D, W, S).
+
+### Quantidade de itens no tabuleiro
+- **QTD_PAREDES** — quantidade de paredes (X) geradas no tabuleiro.
+- **QTD_ARMADILHAS** — quantidade de armadilhas (A) geradas.
+- **QTD_BONUS** — quantidade de bônus (B) gerados.
+- **QTD_MOEDAS** — quantidade de moedas (M) geradas.
+- **QTD_TESOUROS** — quantidade de tesouros (T) gerados. Deve ser sempre 1, já que encontrar o tesouro é a condição de vitória.
+- **TOTAL_ITENS** — soma automática de todas as quantidades acima. Usada para validar se o total de itens cabe no tabuleiro.
+- **TOTAL_CASAS** — número de casas disponíveis para receber itens (todas exceto a posição inicial [1,1]).
+
+> Ao ajustar `TAM_TABULEIRO` ou as quantidades de itens, é importante garantir que `TOTAL_ITENS` não ultrapasse `TOTAL_CASAS` — o código já faz essa verificação no início da execução e exibe uma mensagem de erro caso isso aconteça.
