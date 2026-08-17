@@ -1,3 +1,5 @@
+//Dupla: Raphael Catanduba e Gabriel Catanduba
+
 Algoritmo "Caça ao Tesouro"
 const
      EN_GASTA = 1
