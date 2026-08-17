@@ -1,4 +1,4 @@
-Algoritmo "semnome"
+Algoritmo "Caça ao Tesouro"
 const
      EN_GASTA = 1
      EN_INICIAL = 100
@@ -18,7 +18,7 @@ const
      QTD_TESOUROS = 1
      TOTAL_ITENS = QTD_PAREDES + QTD_ARMADILHAS + QTD_BONUS + QTD_MOEDAS + QTD_TESOUROS
      TOTAL_CASAS = TAM_TABULEIRO * TAM_TABULEIRO - 1
-     
+
      MODO_DEBUG = FALSO
 
 
@@ -42,6 +42,7 @@ Var
 
    direcao_atual : caractere
    contador_armadilhas  , contador_bonus: inteiro
+   contador_movimentos : inteiro
    achou_tesouro : logico
 
 
@@ -258,7 +259,7 @@ Procedimento revelar_parede_se_houver(pos_x, pos_y : inteiro; direcao : caracter
             fimse
         fimse
     fimprocedimento
-    
+
 // ===================== EFEITOS DAS CASAS =====================
 
 Procedimento verificar_condicao_casa()
@@ -267,20 +268,27 @@ Procedimento verificar_condicao_casa()
 
           caso "A"
               jogador.energia <- jogador.energia - EN_GASTA_ARMADILHA
+              se jogador.energia < 0 entao
+                  jogador.energia <- 0
+              fimse
               contador_armadilhas <- contador_armadilhas + 1
               tabuleiro_real[jogador.posicao_y, jogador.posicao_x] <- "."
-              
+              escreval("o jogador caiu em uma armadilha e perdeu " , EN_GASTA_ARMADILHA , " de energia")
+
           caso "B"
               jogador.energia <- jogador.energia + EN_BONUS
               contador_bonus <- contador_bonus + 1
               tabuleiro_real[jogador.posicao_y, jogador.posicao_x] <- "."
-              
+              escreval("o jogador encontrou um bonus e ganhou " , EN_BONUS , " de energia")
+
           caso "M"
               jogador.dinheiro <- jogador.dinheiro + MOEDA
               tabuleiro_real[jogador.posicao_y, jogador.posicao_x] <- "."
-              
+              escreval("o jogador encontrou " , MOEDA , " moedas")
+
           caso "T"
             achou_tesouro <- Verdadeiro
+            escreval("o jogador encontrou o tesouro!")
 
        fimescolha
 fimprocedimento
@@ -340,8 +348,10 @@ jogador.posicao_x <- 1
 jogador.posicao_y <- 1
 
 jogador.energia <-  EN_INICIAL
+jogador.dinheiro <- 0
 contador_armadilhas <- 0
 contador_bonus <- 0
+contador_movimentos <- 0
 achou_tesouro <- falso
 
 // geração aleatória do tabuleiro
@@ -371,13 +381,17 @@ Enquanto (achou_tesouro = falso) e (jogador.energia > 0) faca
     ate validacao_caractere(direcao_atual , DIRECAO_PERMITIDA)
 
     tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x] <- aux_tabuleiro
-    
+
     revelar_parede_se_houver(jogador.posicao_x, jogador.posicao_y, direcao_atual)
 
     se validar_mov(jogador.posicao_x, jogador.posicao_y, direcao_atual) entao
        jogador.posicao_x <- jogador.posicao_x + calcular_mov_x(direcao_atual)
        jogador.posicao_y <- jogador.posicao_y + calcular_mov_y(direcao_atual)
        jogador.energia <- jogador.energia - EN_GASTA
+       se jogador.energia < 0 entao
+           jogador.energia <- 0
+       fimse
+       contador_movimentos <- contador_movimentos + 1
 
     // revela a casa nova antes de processar o efeito
        revelar_casa_atual()
@@ -386,16 +400,18 @@ Enquanto (achou_tesouro = falso) e (jogador.energia > 0) faca
 
     // depois de processado (e zerado no real), reflete no visível também
        revelar_casa_atual()
-       
+
        aux_tabuleiro <- tabuleiro_visivel[jogador.posicao_y , jogador.posicao_x]
 fimse
 
 
 fimEnquanto
 
-escreval("caiu na armadilha:" ,contador_armadilhas , " vezes")
-escreval("pegou:" ,jogador.dinheiro , " moedas")
-escreval("pegou:" ,contador_bonus , " bonus")
-
+escreval("---- Fim de jogo ----")
+escreval("numero de movimentos: " , contador_movimentos)
+escreval("energia restante: " , jogador.energia)
+escreval("moedas coletadas: " , jogador.dinheiro)
+escreval("armadilhas encontradas: " , contador_armadilhas)
+escreval("bonus coletados: " , contador_bonus)
 
 Fimalgoritmo
